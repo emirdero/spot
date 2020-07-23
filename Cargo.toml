@@ -6,4 +6,8 @@ authors = ["Emir Derouiche"]
 edition = "2018"
 license = "MIT"
 
+exclude=[
+    "target"
+]
+
 [dependencies]

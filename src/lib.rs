@@ -2,15 +2,15 @@ use std::sync::{Arc, Condvar, Mutex};
 use std::thread;
 use std::time;
 
-pub struct spot {
+pub struct Spot {
     threads: Vec<std::thread::JoinHandle<()>>,
     working_threads_arc: Arc<(Mutex<u32>, Condvar)>,
     amount_of_threads: u32,
 }
 
-impl spot {
-    pub fn new(amount_of_threads: u32) -> Workers {
-        return spot {
+impl Spot {
+    pub fn new(amount_of_threads: u32) -> Spot {
+        return Spot {
             threads: Vec::new(),
             working_threads_arc: Arc::new((Mutex::new(0u32), Condvar::new())),
             amount_of_threads: amount_of_threads,
