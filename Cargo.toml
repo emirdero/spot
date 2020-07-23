@@ -3,7 +3,7 @@ name = "spot"
 description = "HTTP library that emphezies simplicity and minimalism. Inspired by Flask and Exress.js"
 version = "0.1.0"
 authors = ["Emir Derouiche"]
-edition = "2020"
+edition = "2018"
 license = "MIT"
 
 [dependencies]
