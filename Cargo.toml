@@ -2,6 +2,8 @@
 name = "spot"
 description = "HTTP library that emphezies simplicity and minimalism. Inspired by Flask and Exress.js"
 version = "0.1.0"
+repository = "https://github.com/memir0/spot"
+documentation = "https://github.com/memir0/spot/wiki"
 authors = ["Emir Derouiche"]
 edition = "2018"
 license = "MIT"

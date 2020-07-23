@@ -1,6 +1,5 @@
 use std::sync::{Arc, Condvar, Mutex};
 use std::thread;
-use std::time;
 
 pub struct Spot {
     threads: Vec<std::thread::JoinHandle<()>>,
