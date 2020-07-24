@@ -1,5 +1,7 @@
 use std::sync::{Arc, Condvar, Mutex};
 use std::thread;
+mod request;
+mod response;
 
 pub struct Spot {
     threads: Vec<std::thread::JoinHandle<()>>,
@@ -9,33 +11,28 @@ pub struct Spot {
 
 impl Spot {
     pub fn new(amount_of_threads: u32) -> Spot {
+        // Start worker threads
+        let mut threads = Vec::new();
+        for i in 0..amount_of_threads {
+            let new_worker = thread::Builder::new()
+                .name(format!("Spot-Worker-{}", i + 1))
+                .spawn(move || {
+                    print!("Hello");
+                });
+            match new_worker {
+                Ok(thread) => threads.push(thread),
+                Err(error) => {
+                    println!("Spot: Failed to start thread {}, ERROR: {}", i + 1, error);
+                }
+            }
+        }
         return Spot {
-            threads: Vec::new(),
+            threads: threads,
             working_threads_arc: Arc::new((Mutex::new(0u32), Condvar::new())),
             amount_of_threads: amount_of_threads,
         };
     }
-    pub fn post(&mut self, task: fn()) {
-        let working_threads = self.working_threads_arc.clone();
-        let amount_of_threads_copy = self.amount_of_threads;
-        let thread = thread::spawn(move || {
-            let &(ref num, ref cvar) = &*working_threads;
-            {
-                let mut start = num.lock().unwrap();
-                while *start >= amount_of_threads_copy {
-                    start = cvar.wait(start).unwrap();
-                }
-                *start += 1;
-            }
-            println!("Running!");
-            task();
-            println!("Done!");
-            let mut start = num.lock().unwrap();
-            *start -= 1;
-            cvar.notify_one();
-        });
-        self.threads.push(thread);
-    }
+    pub fn post(&mut self, path: String, function: fn(request::Request, response::Response)) {}
 
     pub fn end(self) {
         for thread in self.threads {
