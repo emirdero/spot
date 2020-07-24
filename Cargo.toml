@@ -4,12 +4,17 @@ description = "HTTP library that emphezies simplicity and minimalism. Inspired b
 version = "0.1.0"
 repository = "https://github.com/memir0/spot"
 documentation = "https://github.com/memir0/spot/wiki"
+keywords = ["http", "spot", "web", "server"]
+categories = ["network-programming", "web-programming::http-server"]
 authors = ["Emir Derouiche"]
 edition = "2018"
 license = "MIT"
 
-exclude=[
-    "target"
+include = [
+  "Cargo.toml",
+  "src/**/*",
+  #"build.rs",
 ]
+
 
 [dependencies]
