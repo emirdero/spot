@@ -6,7 +6,7 @@ pub struct Response {
 }
 
 impl Response {
-    pub fn new(body: String, headers: HashMap<String, String>) -> Request {
+    pub fn new(body: String, headers: HashMap<String, String>) -> Response {
         return Response {
             body: body,
             headers: headers,

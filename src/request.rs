@@ -12,7 +12,7 @@ pub struct Request {
 impl Request {
     pub fn new(
         url: String,
-        params: Vec<String>,
+        params: HashMap<String, String>,
         body: String,
         http_version: String,
         method: String,
