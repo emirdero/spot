@@ -1,6 +1,6 @@
 # SPOT
 
-An HTTP library that emphezies simplicity and minimalism. Inspired by Flask and Exress.js
+An HTTP rust crate that emphezies simplicity and minimalism. Inspired by Flask and Exress.js
 Features:
 
 - Worker-style multithreading
