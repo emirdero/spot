@@ -105,7 +105,7 @@ impl Spot {
 
         // Stream distributor
         for stream in listener.incoming() {
-            let mut stream = match stream {
+            let stream = match stream {
                 Ok(stream) => stream,
                 Err(error) => {
                     println!("Tcp error: {}", error);

@@ -3,7 +3,7 @@ use spot::request::Request;
 use spot::response::Response;
 
 fn main() {
-    let mut app = spot::Spot::new(6);
+    let mut app = spot::Spot::new(1);
 
     app.route("/", |req: Request, mut res: Response| -> Response {
         if req.method == "GET" {

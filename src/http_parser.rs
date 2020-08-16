@@ -6,10 +6,6 @@ use std::net::TcpStream;
 pub struct HttpParser {}
 
 impl HttpParser {
-    pub fn new() -> HttpParser {
-        return HttpParser {};
-    }
-
     pub fn parse(stream: &TcpStream) -> Result<request::Request, String> {
         let mut reader = BufReader::new(stream);
         // Read first line
@@ -30,7 +26,7 @@ impl HttpParser {
         for line_result in reader.by_ref().lines() {
             let line = match line_result {
                 Ok(line_string) => line_string,
-                Err(error) => String::from("ERROR"),
+                Err(_error) => String::from("ERROR"),
             };
             if line == "" {
                 break;
