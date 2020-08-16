@@ -11,7 +11,7 @@ Features:
 
 # Getting started
 
-Here is some example code that shows spot in action. It should be self explainorty if you are familiar with http libraries.
+Here is some example code that shows spot in action. It should be self explanatory if you are familiar with http libraries.
 
 ```rust
 extern crate spot;
