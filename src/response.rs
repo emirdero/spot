@@ -19,20 +19,17 @@ impl Response {
         self.status = new_status;
     }
 
-    pub fn header(&mut self, name: String, value: String) {
-        if self.headers.contains_key(&name) {
-            self.headers.remove(&name);
+    pub fn header(&mut self, name: impl AsRef<str>, value: impl AsRef<str>) {
+        if self.headers.contains_key(&name.as_ref().to_string()) {
+            self.headers.remove(&name.as_ref().to_string());
         }
-        self.headers.insert(name, value);
+        self.headers
+            .insert(name.as_ref().to_string(), value.as_ref().to_string());
     }
 
     pub fn body(&mut self, text: impl AsRef<str>) {
         self.body = text.as_ref().to_string();
         self.header(String::from("content-length"), self.body.len().to_string());
-        self.header(
-            String::from("content-type"),
-            String::from("text/html; charset=UTF-8"),
-        );
     }
 
     pub fn to_http(self) -> String {

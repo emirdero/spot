@@ -30,13 +30,12 @@ impl Spot {
         &mut self,
         path: &str,
         function: fn(request::Request, response::Response) -> response::Response,
-    ) -> bool {
+    ) {
         if self.routes.contains_key(path) {
-            println!("ERROR: Route already defined");
-            return false;
+            println!("Warning: Route defined twice, using last definition");
+            self.routes.remove(path);
         }
         self.routes.insert(path.to_owned(), function);
-        return true;
     }
 
     pub fn bind(&mut self, ip: &str) -> Result<bool, String> {
@@ -82,6 +81,7 @@ impl Spot {
                         }
                     };
                     let mut response = response::Response::new(String::new(), HashMap::new());
+                    response.header("content-type", "text/html; charset=UTF-8");
                     if routes_clone.contains_key(&request.url) {
                         response = routes_clone[&request.url](request, response);
                     }
