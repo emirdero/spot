@@ -1,0 +1,13 @@
+[package]
+name = "spot_test"
+version = "0.1.0"
+authors = ["Emir Derouiche"]
+edition = "2018"
+license = "MIT"
+
+[[bin]]
+name = "test"
+path = "test.rs"
+
+[dependencies]
+spot = { path = "../" }
