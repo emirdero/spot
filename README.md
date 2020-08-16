@@ -1,6 +1,7 @@
 # SPOT
 
 An HTTP rust crate that emphezies simplicity and minimalism. Inspired by Flask and Exress.js
+
 Features:
 
 - Worker-style multithreading
