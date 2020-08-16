@@ -15,7 +15,6 @@ Here is some example code that shows spot in action. It should be self explanato
 
 ```rust
 extern crate spot;
-use spot;
 use spot::request::Request;
 use spot::response::Response;
 
