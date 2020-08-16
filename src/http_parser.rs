@@ -10,7 +10,7 @@ impl HttpParser {
         return HttpParser {};
     }
 
-    pub fn parse(stream: TcpStream) -> Result<request::Request, String> {
+    pub fn parse(stream: &TcpStream) -> Result<request::Request, String> {
         let mut reader = BufReader::new(stream);
         // Read first line
         let mut http_request_line = String::new();
@@ -32,6 +32,9 @@ impl HttpParser {
                 Ok(line_string) => line_string,
                 Err(error) => String::from("ERROR"),
             };
+            if line == "" {
+                break;
+            }
             if line == "ERROR" {
                 return Err(String::from("Failed to read line from TCP stream"));
             }

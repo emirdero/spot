@@ -1,12 +1,11 @@
 use std::collections::HashMap;
-
 pub struct Request {
-    url: String,
-    params: HashMap<String, String>,
-    body: String,
-    http_version: String,
-    method: String,
-    headers: HashMap<String, String>,
+    pub url: String,
+    pub params: HashMap<String, String>,
+    pub body: String,
+    pub http_version: String,
+    pub method: String,
+    pub headers: HashMap<String, String>,
 }
 
 impl Request {
