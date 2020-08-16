@@ -63,7 +63,7 @@ impl HttpParser {
                 Ok(result) => result,
                 Err(_error) => -1,
             };
-            if body_length > 0 {
+            if body_length < 0 {
                 return Err(String::from("Invalid content-legth header"));
             }
             let mut body_bytes = vec![0; body_length as usize];
