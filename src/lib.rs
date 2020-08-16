@@ -66,11 +66,20 @@ impl Spot {
                     while *waiting {
                         waiting = condvar.wait(waiting).unwrap();
                     }
-                    let mut stream: TcpStream = receiver.recv().unwrap();
+                    let mut stream: TcpStream = match receiver.recv() {
+                        Ok(stream) => stream,
+                        Err(error) => {
+                            println!("Error: {}", error);
+                            continue;
+                        }
+                    };
                     let result = http_parser::HttpParser::parse(&stream);
                     let request = match result {
                         Ok(request) => request,
-                        Err(_error) => continue,
+                        Err(error) => {
+                            println!("Error: {}", error);
+                            continue;
+                        }
                     };
                     let mut response = response::Response::new(String::new(), HashMap::new());
                     if routes_clone.contains_key(&request.url) {
