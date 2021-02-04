@@ -28,5 +28,5 @@ fn main() {
     });
 
     let err = app.bind("127.0.0.1:3000");
-    println!("{}", err.unwrap());
+    println!("{}", err);
 }

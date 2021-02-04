@@ -7,9 +7,9 @@ pub struct Response {
 }
 
 impl Response {
-    pub fn new(body: String, headers: HashMap<String, String>) -> Response {
+    pub fn new(status: u16, body: String, headers: HashMap<String, String>) -> Response {
         return Response {
-            status: 404,
+            status: status,
             body: body,
             headers: headers,
         };
