@@ -19,18 +19,22 @@ use spot::request::Request;
 use spot::response::Response;
 
 fn main() {
-    let mut app = spot::Spot::new(1);
+    // Create a spot app with 2 worker threads
+    let mut app = spot::Spot::new(2);
 
+    // Add a GET endpoint to /
     app.route("/", |req: Request, mut res: Response| -> Response {
         if req.method == "GET" {
             res.status(200);
             res.body("<h1>Hello World!</h1>");
             return res;
         } else {
+            // Default response is 404
             return res;
         };
     });
 
+    // Add a POST endpoint to /post
     app.route("/post", |req: Request, mut res: Response| -> Response {
         println!("{}", req.body);
         if req.method == "POST" {
@@ -43,8 +47,10 @@ fn main() {
         };
     });
 
+    // Bind the spot app to port 3000 on the local IP adress
     let err = app.bind("127.0.0.1:3000");
     println!("{}", err);
 }
+
 
 ```
