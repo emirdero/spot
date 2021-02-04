@@ -20,10 +20,13 @@ fn main() {
 
     // Add a POST endpoint to /post
     app.route("/post", |req: Request, mut res: Response| -> Response {
+        // Spot does not have JSON serilization built inn,
+        // if you want to parse JSON consider combining spot with serde_json (https://crates.io/crates/serde_json)
         println!("{}", req.body);
         if req.method == "POST" {
             res.status(200);
             res.body("{\"message\": \"Hello World!\"}");
+            // HTTP headers can be added like this
             res.header("content-type", "application/json");
             return res;
         } else {
