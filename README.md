@@ -5,7 +5,7 @@ An HTTP rust crate that emphezies simplicity and minimalism. Inspired by Flask a
 Features:
 
 - Worker-style multithreading
-- Zero dependencies
+- Only one dependency
 - \<500 lines of code. Easy to audit and extend
 - Easy to use
 
@@ -14,13 +14,12 @@ Features:
 Here is some example code that shows spot in action. It should be self explanatory if you are familiar with http libraries.
 
 ```rust
-extern crate spot;
+use spot;
 use spot::request::Request;
 use spot::response::Response;
 
 fn main() {
-    // Number is how many worker threads you want
-    let mut app = spot::Spot::new(6);
+    let mut app = spot::Spot::new(1);
 
     app.route("/", |req: Request, mut res: Response| -> Response {
         if req.method == "GET" {
@@ -45,7 +44,7 @@ fn main() {
     });
 
     let err = app.bind("127.0.0.1:3000");
-    println!("{}", err.unwrap());
+    println!("{}", err);
 }
 
 ```
