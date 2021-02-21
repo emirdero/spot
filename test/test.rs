@@ -5,17 +5,13 @@ use spot::response::Response;
 fn main() {
     // Create a spot app with 2 worker threads
     let mut app = spot::Spot::new(2);
-
-    // Add a GET endpoint to /
+    app.use_public();
     app.route("/", |req: Request, mut res: Response| -> Response {
         if req.method == "GET" {
-            res.status(200);
-            res.body("<h1>Hello World!</h1>");
-            return res;
-        } else {
-            // Default response is 404
-            return res;
-        };
+            res.status(301);
+            res.header("Location", "/index.html");
+        }
+        return res;
     });
 
     // GET with params
