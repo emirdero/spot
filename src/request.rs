@@ -26,4 +26,13 @@ impl Request {
             headers: headers,
         };
     }
+
+    pub fn contains_params(&self, keys: Vec<&str>) -> bool {
+        for key in keys {
+            if !self.params.contains_key(key) {
+                return false;
+            }
+        }
+        return true;
+    }
 }

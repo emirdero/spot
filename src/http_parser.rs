@@ -77,11 +77,11 @@ impl HttpParser {
         }
 
         // Get parameters from request
-        let url_split: Vec<&str> = http_request_line_split[1].split("?").collect();
+        let params_split: Vec<&str> = http_request_line_split[1].split("?").collect();
         let mut parameters = HashMap::new();
         // If the url has parameters set, get them
-        if url_split.len() > 1 {
-            let parameters_vec: Vec<&str> = url_split[1].split("&").collect();
+        if params_split.len() > 1 {
+            let parameters_vec: Vec<&str> = params_split[1].split("&").collect();
             for parameter in parameters_vec {
                 let parameter_split: Vec<&str> = parameter.split("=").collect();
                 if parameter_split.len() > 1 {

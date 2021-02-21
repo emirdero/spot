@@ -25,11 +25,17 @@ impl Spot {
     }
 
     pub fn route(&mut self, path: &str, function: fn(request::Request, Response) -> Response) {
-        if self.routes.contains_key(path) {
-            println!("Warning: Route defined twice, using latest definition");
-            self.routes.remove(path);
+        let mut path_string = String::from(path);
+        // Remove trailing / so that pathing is agnostic towards /example/ or /example
+        let last_char = path_string.pop().unwrap();
+        if last_char != '/' {
+            path_string.push(last_char)
         }
-        self.routes.insert(path.to_owned(), function);
+        if self.routes.contains_key(&path_string) {
+            println!("Warning: Route defined twice, using latest definition");
+            self.routes.remove(&path_string);
+        }
+        self.routes.insert(path_string, function);
     }
 
     pub fn bind(&mut self, ip: &str) -> String {
@@ -57,14 +63,21 @@ fn handle_request(stream: TcpStream, routes: HashMap<String, fn(Request, Respons
     let request = match parse_result {
         Ok(request) => request,
         Err(error) => {
-            println!("Error: {}", error);
+            println!("HTTP Parser Error: {}", error);
             response.status(400);
             return write_response(stream, response);
         }
     };
     response.header("content-type", "text/html; charset=UTF-8");
-    if routes.contains_key(&request.url) {
-        response = routes[&request.url](request, response);
+    // Remove params
+    let mut request_route = String::from(request.url.split("?").next().unwrap());
+    // Remove trailing / so that pathing is agnostic towards /example/ or /example
+    let last_char = request_route.pop().unwrap();
+    if last_char != '/' {
+        request_route.push(last_char)
+    }
+    if routes.contains_key(&request_route) {
+        response = routes[&request_route](request, response);
     }
     return write_response(stream, response);
 }

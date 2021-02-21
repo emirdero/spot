@@ -18,8 +18,32 @@ fn main() {
         };
     });
 
+    // GET with params
+    app.route("/user/", |req: Request, mut res: Response| -> Response {
+        let param_keys = ["name", "age"];
+        if req.method == "GET" {
+            for key in param_keys.iter() {
+                if !req.params.contains_key(&key[..]) {
+                    res.status(400);
+                    res.body(format!("Missing parameter: {}", key));
+                    return res;
+                }
+            }
+            res.status(200);
+            res.body(format!(
+                "<h1>Hello {}, age {}!</h1>",
+                req.params.get("name").unwrap(),
+                req.params.get("age").unwrap(),
+            ));
+            return res;
+        } else {
+            // Default response is 404
+            return res;
+        };
+    });
+
     // Add a POST endpoint to /post
-    app.route("/post", |req: Request, mut res: Response| -> Response {
+    app.route("/post/", |req: Request, mut res: Response| -> Response {
         // Spot does not have JSON serilization built inn,
         // if you want to parse JSON consider combining spot with serde_json (https://crates.io/crates/serde_json)
         println!("{}", req.body);
