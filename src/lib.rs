@@ -18,6 +18,7 @@ use response::Response;
 pub struct Spot {
     pool: ThreadPool,
     routes: HashMap<String, fn(Request, Response) -> Response>,
+    middleware: Vec<(String, fn(Request, Response) -> (Request, Response, bool))>,
 }
 
 impl Spot {
@@ -25,10 +26,23 @@ impl Spot {
         return Spot {
             pool: ThreadPool::new(amount_of_threads),
             routes: HashMap::new(),
+            middleware: Vec::new(),
         };
     }
 
-    // TODO: Add middleware
+    pub fn middle(
+        &mut self,
+        path: &str,
+        function: fn(Request, Response) -> (Request, Response, bool),
+    ) {
+        let mut path_string = String::from(path);
+        // Remove trailing / so that pathing is agnostic towards /example/ or /example
+        let last_char = path_string.pop().unwrap();
+        if last_char != '/' {
+            path_string.push(last_char)
+        }
+        self.middleware.push((path_string, function));
+    }
 
     pub fn route(&mut self, path: &str, function: fn(Request, Response) -> Response) {
         let mut path_string = String::from(path);
@@ -144,6 +158,13 @@ impl Spot {
                 return String::from(format!("Failed to bind to ip: {}", error));
             }
         };
+        // Sort middleware by length
+        self.middleware.sort_by(|a, b| a.0.len().cmp(&b.0.len()));
+
+        for mid in &self.middleware {
+            println!("{}", mid.0);
+        }
+
         println!("Spot server listening on: http://{}", ip);
         for stream in listener.incoming() {
             let stream = stream.unwrap();
@@ -175,7 +196,10 @@ fn handle_request(stream: TcpStream, routes: HashMap<String, fn(Request, Respons
     if last_char != '/' {
         request_route.push(last_char)
     }
+
     if routes.contains_key(&request_route) {
+        // Route through middleware
+        for mid in self.middleware {}
         response = routes[&request_route](request, response);
     }
     return write_response(stream, response);

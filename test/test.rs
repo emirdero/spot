@@ -8,6 +8,19 @@ fn main() {
     // Use a directory called public in the project root to serve static files
     app.public("public");
 
+    app.middle(
+        "/post/",
+        |mut req: Request, mut res: Response| -> (Request, Response, bool) {
+            if req.method == "POST" {
+                if req.body.len() > 0 {
+                    return (req, res, true);
+                }
+                res.status(400);
+            }
+            return (req, res, false);
+        },
+    );
+
     app.route("/", |req: Request, mut res: Response| -> Response {
         if req.method == "GET" {
             res.status(301);
