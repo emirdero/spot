@@ -61,31 +61,61 @@ impl Spot {
                 let path = req.url;
                 let path_split = path.split('.');
                 let file_ending = path_split.last().unwrap();
+                let supported_types = [
+                    ("html", "text/html"),
+                    ("css", "text/css"),
+                    ("json", "application/json"),
+                    ("js", "application/javascript"),
+                    ("zip", "application/zip"),
+                    ("csv", "text/csv"),
+                    ("xml", "text/xml"),
+                    ("ico", "image/x-icon"),
+                    ("jpg", "image/jpeg"),
+                    ("jpeg", "image/jpeg"),
+                    ("png", "image/png"),
+                    ("gif", "image/gif"),
+                    ("mp3", "audio/mpeg"),
+                    ("mp4", "video/mp4"),
+                    ("webm", "video/webm"),
+                ];
                 let mut file_type = "text/plain";
-                if file_ending == "json" {
-                    file_type = "application/json";
-                } else if file_ending == "html" {
-                    file_type = "text/html";
-                } else if file_ending == "js" {
-                    file_type = "application/javascript";
-                }
-                // remove first / from path
-                let mut file = fs::File::open(&path[1..]).unwrap();
-                let mut contents = String::new();
-                let result = file.read_to_string(&mut contents);
-                match result {
-                    Ok(_) => {}
-                    Err(error) => {
-                        println!("{}", error);
+                for supported_type in supported_types.iter() {
+                    if supported_type.0 == file_ending {
+                        file_type = supported_type.1;
                     }
                 }
-                res.status(200);
-                res.body(contents);
-                res.header("content-type", file_type);
-                return res;
-            } else {
-                return res;
-            };
+                // remove first / from path and read metadata then file
+                match fs::metadata(&path[1..]) {
+                    Ok(metadata) => {
+                        let mut contents = vec![0; metadata.len() as usize];
+                        match fs::File::open(&path[1..]) {
+                            Ok(mut file) => {
+                                let result = file.read(&mut contents);
+                                match result {
+                                    Ok(_) => {
+                                        res.status(200);
+                                        res.body_bytes(contents);
+                                        res.header("content-type", file_type);
+                                    }
+                                    Err(error) => {
+                                        println!("{}", error);
+                                        res.status(500);
+                                    }
+                                }
+                            }
+                            Err(error) => {
+                                println!("{}", error);
+                                res.status(500);
+                            }
+                        }
+                    }
+                    Err(error) => {
+                        println!("{}", error);
+                        res.status(500);
+                    }
+                }
+            }
+            return res;
         };
         // Replace Windows specific backslashes in path with forward slashes
         let result = path.replace("\\", "/");
@@ -136,7 +166,7 @@ impl Spot {
 }
 
 fn handle_request(stream: TcpStream, routes: HashMap<String, fn(Request, Response) -> Response>) {
-    let mut response = Response::new(404, String::new(), HashMap::new());
+    let mut response = Response::new(404, Vec::new(), HashMap::new());
     let parse_result = HttpParser::parse(&stream);
     let request = match parse_result {
         Ok(request) => request,
@@ -166,7 +196,7 @@ fn write_response(mut stream: TcpStream, response: Response) {
     stream
         .set_write_timeout(Some(five_seconds))
         .expect("set_write_timeout call failed");
-    match stream.write(response.to_http().as_bytes()) {
+    match stream.write(&response.to_http()) {
         Ok(_) => println!("Response sent with status code {}", status_code),
         Err(e) => println!("Failed sending response: {}", e),
     }

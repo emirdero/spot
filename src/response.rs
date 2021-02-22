@@ -2,12 +2,12 @@ use std::collections::HashMap;
 
 pub struct Response {
     pub status: u16,
-    pub body: String,
+    pub body: Vec<u8>,
     pub headers: HashMap<String, String>,
 }
 
 impl Response {
-    pub fn new(status: u16, body: String, headers: HashMap<String, String>) -> Response {
+    pub fn new(status: u16, body: Vec<u8>, headers: HashMap<String, String>) -> Response {
         return Response {
             status: status,
             body: body,
@@ -19,26 +19,35 @@ impl Response {
         self.status = new_status;
     }
 
-    pub fn header(&mut self, name: impl AsRef<str>, value: impl AsRef<str>) {
-        if self.headers.contains_key(&name.as_ref().to_string()) {
-            self.headers.remove(&name.as_ref().to_string());
+    pub fn header(&mut self, name_ref: impl AsRef<str>, value_ref: impl AsRef<str>) {
+        let name = name_ref.as_ref().to_string();
+        let value = value_ref.as_ref().to_string();
+        if self.headers.contains_key(&name) {
+            self.headers.remove(&name);
         }
-        self.headers
-            .insert(name.as_ref().to_string(), value.as_ref().to_string());
+        self.headers.insert(name, value);
     }
 
-    pub fn body(&mut self, text: impl AsRef<str>) {
-        self.body = text.as_ref().to_string();
+    pub fn body(&mut self, data_ref: impl AsRef<str>) {
+        let data = data_ref.as_ref().to_string();
+        self.body = data.as_bytes().to_vec();
         self.header(String::from("content-length"), self.body.len().to_string());
     }
 
-    pub fn to_http(self) -> String {
-        let mut http = String::from(format!("HTTP/1.1 {} \n", self.status));
+    pub fn body_bytes(&mut self, data: Vec<u8>) {
+        self.body = data;
+        self.header(String::from("content-length"), self.body.len().to_string());
+    }
+
+    pub fn to_http(self) -> Vec<u8> {
+        let mut http: Vec<u8> = Vec::new();
+        http.extend_from_slice(format!("HTTP/1.1 {} \n", self.status).as_bytes());
         for (key, value) in self.headers {
-            http.push_str(&format!("{}: {}\n", key, value)[..]);
+            http.extend_from_slice(format!("{}: {}\n", key, value).as_bytes());
         }
-        http.push('\n');
-        http.push_str(&self.body[..]);
+        // append newline
+        http.push(10);
+        http.extend_from_slice(&self.body);
         return http;
     }
 }
