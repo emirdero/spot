@@ -6,7 +6,7 @@ fn main() {
     // Create a spot app with 2 worker threads
     let mut app = spot::Spot::new(2);
     // Use a directory called public in the project root to serve static files
-    app.use_public();
+    app.public("public");
 
     app.route("/", |req: Request, mut res: Response| -> Response {
         if req.method == "GET" {

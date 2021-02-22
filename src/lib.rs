@@ -1,9 +1,11 @@
 extern crate threadpool;
 use std::collections::HashMap;
+use std::env;
 use std::fs;
 use std::io::prelude::*;
 use std::io::Write;
 use std::net::{TcpListener, TcpStream};
+use std::path::Path;
 use std::time::Duration;
 use threadpool::ThreadPool;
 mod http_parser;
@@ -65,8 +67,8 @@ impl Spot {
                 } else if file_ending == "js" {
                     file_type = "application/javascript";
                 }
-                // TODO: make other directories than public avaliable
-                let mut file = fs::File::open(format!("public/{}", path)).unwrap();
+                // remove first / from path
+                let mut file = fs::File::open(&path[1..]).unwrap();
                 let mut contents = String::new();
                 let result = file.read_to_string(&mut contents);
                 match result {
@@ -83,27 +85,33 @@ impl Spot {
                 return res;
             };
         };
-        self.routes.insert(format!("/{}", path), function);
+        // Replace Windows specific backslashes in path with forward slashes
+        let result = path.replace("\\", "/");
+        let route_path = format!("/{}", result);
+        println!("{}", route_path);
+        self.routes.insert(route_path, function);
     }
 
-    fn add_static_files(&mut self, original_directory_len: usize, directory_name: &str) {
-        let dir_iter = fs::read_dir(directory_name).unwrap();
+    fn add_static_files(&mut self, directory: &Path, path: &str) {
+        let dir_iter = fs::read_dir(path).unwrap();
 
         for item in dir_iter {
-            let item_path = item.unwrap().path();
-            let name = item_path.file_name().unwrap().to_string_lossy();
-            let path_name = format!("{}/{}", directory_name, &name);
-            if fs::metadata(&path_name).unwrap().is_dir() {
-                Spot::add_static_files(self, original_directory_len, &path_name);
+            let item_uw = item.unwrap();
+            let item_path = item_uw.path().into_os_string().into_string().unwrap();
+            let item_metadata = item_uw.metadata().unwrap();
+            if item_metadata.is_dir() {
+                Spot::add_static_files(self, directory, &item_path);
             } else {
-                let route = &format!("{}/{}", directory_name, name)[original_directory_len..];
-                Spot::route_file(self, route);
+                Spot::route_file(self, &item_path);
             }
         }
     }
-    pub fn use_public(&mut self) {
-        let public_path = "public";
-        self.add_static_files(public_path.len() + 1, public_path);
+    pub fn public(&mut self, dir_name: &str) {
+        let path = env::current_dir().unwrap();
+        let root = path.join(dir_name);
+        assert!(env::set_current_dir(&root).is_ok());
+        let dir = env::current_dir().unwrap();
+        self.add_static_files(dir.as_path(), "");
     }
 
     pub fn bind(&mut self, ip: &str) -> String {
@@ -152,11 +160,12 @@ fn handle_request(stream: TcpStream, routes: HashMap<String, fn(Request, Respons
 
 fn write_response(mut stream: TcpStream, response: Response) {
     let five_seconds = Duration::new(5, 0);
+    let status_code = response.status;
     stream
         .set_write_timeout(Some(five_seconds))
         .expect("set_write_timeout call failed");
     match stream.write(response.to_http().as_bytes()) {
-        Ok(_) => println!("Response sent"),
+        Ok(_) => println!("Response sent with status code {}", status_code),
         Err(e) => println!("Failed sending response: {}", e),
     }
 }
