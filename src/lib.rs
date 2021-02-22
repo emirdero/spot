@@ -28,6 +28,8 @@ impl Spot {
         };
     }
 
+    // TODO: Add middleware
+
     pub fn route(&mut self, path: &str, function: fn(Request, Response) -> Response) {
         let mut path_string = String::from(path);
         // Remove trailing / so that pathing is agnostic towards /example/ or /example
