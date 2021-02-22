@@ -1,9 +1,9 @@
 [package]
 name = "spot"
 description = "HTTP library that emphezies simplicity and minimalism. Inspired by Flask and Exress.js"
-version = "0.1.1"
+version = "0.1.3"
 repository = "https://github.com/memir0/spot"
-documentation = "https://github.com/memir0/spot/wiki"
+documentation = "https://docs.rs/spot/"
 keywords = ["http", "spot", "web", "server"]
 categories = ["network-programming", "web-programming::http-server"]
 authors = ["Emir Derouiche"]

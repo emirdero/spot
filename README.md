@@ -7,6 +7,7 @@ Features:
 - Worker-style multithreading
 - Only one dependency
 - \<500 lines of code. Easy to audit and extend
+- Supports middleware, static file folder
 - Easy to use
 
 # Getting started
