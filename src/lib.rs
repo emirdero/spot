@@ -169,18 +169,23 @@ impl Spot {
         for stream in listener.incoming() {
             let stream = stream.unwrap();
             let routes_clone = self.routes.clone();
+            let middleware_clone = self.middleware.clone();
             self.pool.execute(|| {
-                handle_request(stream, routes_clone);
+                handle_request(stream, routes_clone, middleware_clone);
             });
         }
         return String::from("Shutting down.");
     }
 }
 
-fn handle_request(stream: TcpStream, routes: HashMap<String, fn(Request, Response) -> Response>) {
+fn handle_request(
+    stream: TcpStream,
+    routes: HashMap<String, fn(Request, Response) -> Response>,
+    middleware: Vec<(String, fn(Request, Response) -> (Request, Response, bool))>,
+) {
     let mut response = Response::new(404, Vec::new(), HashMap::new());
     let parse_result = HttpParser::parse(&stream);
-    let request = match parse_result {
+    let mut request = match parse_result {
         Ok(request) => request,
         Err(error) => {
             println!("HTTP Parser Error: {}", error);
@@ -199,7 +204,20 @@ fn handle_request(stream: TcpStream, routes: HashMap<String, fn(Request, Respons
 
     if routes.contains_key(&request_route) {
         // Route through middleware
-        for mid in self.middleware {}
+        for mid in middleware {
+            if mid.0.len() > request_route.len() {
+                break;
+            };
+            if mid.0 == request_route[..mid.0.len()] {
+                let answer = mid.1(request, response);
+                response = answer.1;
+                // If the middleware rejects the request we return the response
+                if !answer.2 {
+                    return write_response(stream, response);
+                }
+                request = answer.0;
+            }
+        }
         response = routes[&request_route](request, response);
     }
     return write_response(stream, response);
