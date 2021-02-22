@@ -48,14 +48,6 @@ impl Spot {
     }
 
     pub fn route_file(&mut self, path: &str) {
-        if self.routes.contains_key(path) {
-            println!(
-                "Warning: Route defined twice ({}), using latest definition",
-                path
-            );
-            self.routes.remove(path);
-        }
-
         fn function(req: Request, mut res: Response) -> Response {
             if req.method == "GET" {
                 let path = req.url;
@@ -120,8 +112,7 @@ impl Spot {
         // Replace Windows specific backslashes in path with forward slashes
         let result = path.replace("\\", "/");
         let route_path = format!("/{}", result);
-        println!("{}", route_path);
-        self.routes.insert(route_path, function);
+        Spot::route(self, &route_path, function);
     }
 
     fn add_static_files(&mut self, directory: &Path, path: &str) {
