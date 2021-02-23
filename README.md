@@ -1,11 +1,11 @@
 # SPOT
 
-An HTTP rust crate that emphezies simplicity and minimalism. Inspired by Flask and Exress.js
+An HTTP server framework that emphezies simplicity and minimalism. Inspired by Flask and Exress.js
 
 Features:
 
 - Worker-style multithreading
-- Only one dependency
+- Zero dependencies
 - \<500 lines of code. Easy to audit and extend
 - Supports middleware, static file folder
 - Easy to use

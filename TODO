@@ -1,3 +1,2 @@
 Make testing framework
-Give threads in threadpool middleware and routes only once and not at every request
 Document how to use Spot: github wiki and https://docs.rs/

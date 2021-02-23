@@ -10,7 +10,7 @@ fn main() {
 
     app.middle(
         "/post/",
-        |mut req: Request, mut res: Response| -> (Request, Response, bool) {
+        |req: Request, mut res: Response| -> (Request, Response, bool) {
             if req.method == "POST" {
                 if req.body.len() > 0 {
                     return (req, res, true);

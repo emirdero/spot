@@ -1,22 +1,20 @@
-extern crate threadpool;
 use std::collections::HashMap;
 use std::env;
 use std::fs;
 use std::io::prelude::*;
-use std::io::Write;
-use std::net::{TcpListener, TcpStream};
+use std::net::TcpListener;
 use std::path::Path;
-use std::time::Duration;
-use threadpool::ThreadPool;
-mod http_parser;
+
+pub mod http_parser;
 pub mod request;
 pub mod response;
-use http_parser::HttpParser;
+pub mod threadpool;
 use request::Request;
 use response::Response;
+use threadpool::ThreadPool;
 
 pub struct Spot {
-    pool: ThreadPool,
+    amount_of_threads: usize,
     routes: HashMap<String, fn(Request, Response) -> Response>,
     middleware: Vec<(String, fn(Request, Response) -> (Request, Response, bool))>,
 }
@@ -24,7 +22,7 @@ pub struct Spot {
 impl Spot {
     pub fn new(amount_of_threads: usize) -> Spot {
         return Spot {
-            pool: ThreadPool::new(amount_of_threads),
+            amount_of_threads: amount_of_threads,
             routes: HashMap::new(),
             middleware: Vec::new(),
         };
@@ -145,8 +143,9 @@ impl Spot {
     }
     pub fn public(&mut self, dir_name: &str) {
         let path = env::current_dir().unwrap();
-        let root = path.join(dir_name);
-        assert!(env::set_current_dir(&root).is_ok());
+        let new_root_dir = path.join(dir_name);
+        // Set the specified directory as the root when reading files
+        assert!(env::set_current_dir(&new_root_dir).is_ok());
         let dir = env::current_dir().unwrap();
         self.add_static_files(dir.as_path(), "");
     }
@@ -161,76 +160,22 @@ impl Spot {
         // Sort middleware by length
         self.middleware.sort_by(|a, b| a.0.len().cmp(&b.0.len()));
 
-        for mid in &self.middleware {
-            println!("{}", mid.0);
-        }
+        // clone routes and middleware
+        let routes_clone = self.routes.clone();
+        let middleware_clone = self.middleware.clone();
+
+        // Create threadpool
+        let pool = ThreadPool::new(self.amount_of_threads, routes_clone, middleware_clone);
 
         println!("Spot server listening on: http://{}", ip);
         for stream in listener.incoming() {
-            let stream = stream.unwrap();
-            let routes_clone = self.routes.clone();
-            let middleware_clone = self.middleware.clone();
-            self.pool.execute(|| {
-                handle_request(stream, routes_clone, middleware_clone);
-            });
-        }
-        return String::from("Shutting down.");
-    }
-}
-
-fn handle_request(
-    stream: TcpStream,
-    routes: HashMap<String, fn(Request, Response) -> Response>,
-    middleware: Vec<(String, fn(Request, Response) -> (Request, Response, bool))>,
-) {
-    let mut response = Response::new(404, Vec::new(), HashMap::new());
-    let parse_result = HttpParser::parse(&stream);
-    let mut request = match parse_result {
-        Ok(request) => request,
-        Err(error) => {
-            println!("HTTP Parser Error: {}", error);
-            response.status(400);
-            return write_response(stream, response);
-        }
-    };
-    response.header("content-type", "text/html; charset=UTF-8");
-    // Remove params
-    let mut request_route = String::from(request.url.split("?").next().unwrap());
-    // Remove trailing / so that pathing is agnostic towards /example/ or /example
-    let last_char = request_route.pop().unwrap();
-    if last_char != '/' {
-        request_route.push(last_char)
-    }
-
-    if routes.contains_key(&request_route) {
-        // Route through middleware
-        for mid in middleware {
-            if mid.0.len() > request_route.len() {
-                break;
-            };
-            if mid.0 == request_route[..mid.0.len()] {
-                let answer = mid.1(request, response);
-                response = answer.1;
-                // If the middleware rejects the request we return the response
-                if !answer.2 {
-                    return write_response(stream, response);
+            match stream {
+                Ok(stream_uw) => {
+                    pool.execute(stream_uw);
                 }
-                request = answer.0;
+                Err(error) => println!("{}", error),
             }
         }
-        response = routes[&request_route](request, response);
-    }
-    return write_response(stream, response);
-}
-
-fn write_response(mut stream: TcpStream, response: Response) {
-    let five_seconds = Duration::new(5, 0);
-    let status_code = response.status;
-    stream
-        .set_write_timeout(Some(five_seconds))
-        .expect("set_write_timeout call failed");
-    match stream.write(&response.to_http()) {
-        Ok(_) => println!("Response sent with status code {}", status_code),
-        Err(e) => println!("Failed sending response: {}", e),
+        return String::from("Shutting down.");
     }
 }
