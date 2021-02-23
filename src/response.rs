@@ -31,6 +31,7 @@ impl Response {
     pub fn body(&mut self, data_ref: impl AsRef<str>) {
         let data = data_ref.as_ref().to_string();
         self.body = data.as_bytes().to_vec();
+        // Sets the content length header so that the client knows how far to read
         self.header(String::from("content-length"), self.body.len().to_string());
     }
 
