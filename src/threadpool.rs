@@ -4,9 +4,7 @@ use crate::response::Response;
 use std::collections::HashMap;
 use std::io::Write;
 use std::net::TcpStream;
-use std::sync::mpsc;
-use std::sync::Arc;
-use std::sync::Mutex;
+use std::sync::{mpsc, Arc, Mutex};
 use std::thread;
 use std::time::Duration;
 
@@ -115,12 +113,21 @@ impl Worker {
                     };
                     response.header("content-type", "text/html; charset=UTF-8");
                     // Remove params
-                    let mut request_route = String::from(request.url.split("?").next().unwrap());
+                    let request_wo_params = match request.url.split("?").next() {
+                        Some(url) => url,
+                        None => {
+                            response.status(400);
+                            write_response(stream, response);
+                            continue 'outer; // Skip to next iteration
+                        }
+                    };
+                    let mut request_route = String::from(request_wo_params);
                     // Remove trailing / so that pathing is agnostic towards /example/ or /example
                     let last_char = request_route.pop().unwrap();
-                    if last_char != '/' {
+                    if last_char != '/' || request_route.len() == 0 {
                         request_route.push(last_char)
                     }
+                    println!("{}", request_route);
                     if routes.contains_key(&request_route) {
                         // Route through middleware
                         for mid in &middleware {

@@ -15,7 +15,7 @@ Features:
 Here is some example code that shows spot in action. It should be self explanatory if you are familiar with http libraries.
 
 ```rust
-use spot;
+extern crate spot;
 use spot::request::Request;
 use spot::response::Response;
 

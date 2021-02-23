@@ -36,7 +36,7 @@ impl Spot {
         let mut path_string = String::from(path);
         // Remove trailing / so that pathing is agnostic towards /example/ or /example
         let last_char = path_string.pop().unwrap();
-        if last_char != '/' {
+        if last_char != '/' || path_string.len() == 0 {
             path_string.push(last_char)
         }
         self.middleware.push((path_string, function));
@@ -46,7 +46,7 @@ impl Spot {
         let mut path_string = String::from(path);
         // Remove trailing / so that pathing is agnostic towards /example/ or /example
         let last_char = path_string.pop().unwrap();
-        if last_char != '/' {
+        if last_char != '/' || path_string.len() == 0 {
             path_string.push(last_char)
         }
         if self.routes.contains_key(&path_string) {

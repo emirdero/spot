@@ -21,6 +21,7 @@ fn main() {
         },
     );
 
+    // Redirect
     app.route("/", |req: Request, mut res: Response| -> Response {
         if req.method == "GET" {
             res.status(301);
