@@ -9,6 +9,7 @@ Features:
 - \<500 lines of code. Easy to audit and extend
 - Supports middleware, static file folder
 - Easy to use
+- No unwraps
 
 # Getting started
 
@@ -37,7 +38,7 @@ fn main() {
 
     // Add a POST endpoint to /post
     app.route("/post", |req: Request, mut res: Response| -> Response {
-        // Spot does not have JSON serilization built inn, 
+        // Spot does not have JSON serilization built inn,
         // if you want to parse JSON consider combining spot with serde_json (https://crates.io/crates/serde_json)
         println!("{}", req.body);
         if req.method == "POST" {

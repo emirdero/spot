@@ -35,20 +35,32 @@ impl Spot {
     ) {
         let mut path_string = String::from(path);
         // Remove trailing / so that pathing is agnostic towards /example/ or /example
-        let last_char = path_string.pop().unwrap();
-        if last_char != '/' || path_string.len() == 0 {
-            path_string.push(last_char)
-        }
+        match path_string.pop() {
+            Some(last_char) => {
+                if last_char != '/' || path_string.len() == 0 {
+                    path_string.push(last_char)
+                }
+            }
+            None => {
+                path_string.push('/');
+            }
+        };
         self.middleware.push((path_string, function));
     }
 
     pub fn route(&mut self, path: &str, function: fn(Request, Response) -> Response) {
         let mut path_string = String::from(path);
         // Remove trailing / so that pathing is agnostic towards /example/ or /example
-        let last_char = path_string.pop().unwrap();
-        if last_char != '/' || path_string.len() == 0 {
-            path_string.push(last_char)
-        }
+        match path_string.pop() {
+            Some(last_char) => {
+                if last_char != '/' || path_string.len() == 0 {
+                    path_string.push(last_char)
+                }
+            }
+            None => {
+                path_string.push('/');
+            }
+        };
         if self.routes.contains_key(&path_string) {
             println!(
                 "Warning: Route defined twice ({}), using latest definition",
@@ -64,7 +76,10 @@ impl Spot {
             if req.method == "GET" {
                 let path = req.url;
                 let path_split = path.split('.');
-                let file_ending = path_split.last().unwrap();
+                let file_ending = match path_split.last() {
+                    Some(file_ending) => file_ending,
+                    None => "",
+                };
                 let supported_types = [
                     ("html", "text/html"),
                     ("css", "text/css"),
@@ -130,15 +145,22 @@ impl Spot {
     fn add_static_files(&mut self, directory: &Path, path: &str) {
         let dir_iter = fs::read_dir(path).unwrap();
 
+        // Add all files to path hashmap, for each directory in the public folder we run this function recursivly
         for item in dir_iter {
-            let item_uw = item.unwrap();
-            let item_path = item_uw.path().into_os_string().into_string().unwrap();
-            let item_metadata = item_uw.metadata().unwrap();
-            if item_metadata.is_dir() {
-                Spot::add_static_files(self, directory, &item_path);
-            } else {
-                Spot::route_file(self, &item_path);
-            }
+            match item {
+                Ok(item_uw) => {
+                    let item_path = item_uw.path().into_os_string().into_string().unwrap();
+                    let item_metadata = item_uw.metadata().unwrap();
+                    if item_metadata.is_dir() {
+                        Spot::add_static_files(self, directory, &item_path);
+                    } else {
+                        Spot::route_file(self, &item_path);
+                    }
+                }
+                Err(error) => {
+                    println!("{}", error);
+                }
+            };
         }
     }
     pub fn public(&mut self, dir_name: &str) {

@@ -92,19 +92,21 @@ impl HttpParser {
                 }
             }
         }
-        // TODO: add the real version
         let mut http_version = String::from("1.1");
         let version_split: Vec<&str> = http_request_line_split[2].split("/").collect();
         if version_split.len() > 1 {
             http_version = String::from(version_split[1]);
         }
-        // TODO: make sure the method is full caps
+
+        // Make method uppercase
+        let mut method = String::from(http_request_line_split[0]);
+        method.make_ascii_uppercase();
         Ok(request::Request::new(
             String::from(http_request_line_split[1]),
             parameters,
             body,
             http_version,
-            String::from(http_request_line_split[0]),
+            method,
             http_request_headers,
         ))
     }

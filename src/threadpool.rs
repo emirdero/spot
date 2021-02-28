@@ -68,7 +68,10 @@ impl Drop for ThreadPool {
         println!("Sending terminate message to all workers.");
 
         for _ in &self.workers {
-            self.sender.send(Message::Terminate).unwrap();
+            match self.sender.send(Message::Terminate) {
+                Ok(_) => {}
+                Err(error) => println!("{}", error),
+            }
         }
 
         println!("Shutting down all workers.");
@@ -77,7 +80,10 @@ impl Drop for ThreadPool {
             println!("Shutting down worker {}", worker.id);
 
             if let Some(thread) = worker.thread.take() {
-                thread.join().unwrap();
+                match thread.join() {
+                    Ok(_) => {}
+                    Err(_error) => println!("Failed to join thread"),
+                }
             }
         }
     }
@@ -96,8 +102,23 @@ impl Worker {
         middleware: Vec<(String, fn(Request, Response) -> (Request, Response, bool))>,
     ) -> Worker {
         let thread = thread::spawn(move || 'outer: loop {
-            let message = receiver.lock().unwrap().recv().unwrap();
+            // Receive message from main thread
+            let lock = match receiver.lock() {
+                Ok(lock) => lock,
+                Err(error) => {
+                    println!("{}", error);
+                    continue 'outer;
+                }
+            };
+            let message = match lock.recv() {
+                Ok(message) => message,
+                Err(error) => {
+                    println!("{}", error);
+                    continue 'outer;
+                }
+            };
 
+            // Handle job
             match message {
                 Message::NewJob(stream) => {
                     let mut response = Response::new(404, Vec::new(), HashMap::new());
@@ -123,11 +144,18 @@ impl Worker {
                     };
                     let mut request_route = String::from(request_wo_params);
                     // Remove trailing / so that pathing is agnostic towards /example/ or /example
-                    let last_char = request_route.pop().unwrap();
+                    let last_char = match request_route.pop() {
+                        Some(character) => character,
+                        None => {
+                            response.status(500);
+                            response.body("failed to parse http");
+                            write_response(stream, response);
+                            continue 'outer;
+                        }
+                    };
                     if last_char != '/' || request_route.len() == 0 {
                         request_route.push(last_char)
                     }
-                    println!("{}", request_route);
                     if routes.contains_key(&request_route) {
                         // Route through middleware
                         for mid in &middleware {
@@ -162,12 +190,11 @@ impl Worker {
         };
         fn write_response(mut stream: TcpStream, response: Response) {
             let five_seconds = Duration::new(5, 0);
-            let status_code = response.status;
             stream
                 .set_write_timeout(Some(five_seconds))
                 .expect("set_write_timeout call failed");
             match stream.write(&response.to_http()) {
-                Ok(_) => println!("Response sent with status code {}", status_code),
+                Ok(_) => {}
                 Err(e) => println!("Failed sending response: {}", e),
             }
         }
