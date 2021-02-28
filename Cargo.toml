@@ -9,6 +9,7 @@ categories = ["network-programming", "web-programming::http-server"]
 authors = ["Emir Derouiche"]
 edition = "2018"
 license = "MIT"
+readme="README.md"
 
 include = [
   "Cargo.toml",
