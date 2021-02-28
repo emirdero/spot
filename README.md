@@ -24,11 +24,49 @@ fn main() {
     // Create a spot app with 2 worker threads
     let mut app = spot::Spot::new(2);
 
-    // Add a GET endpoint to /
+    // Use a directory called public in the project root to serve static files
+    app.public("public");
+
+    // Middleware for all requests starting with /post/
+    app.middle(
+        "/post/",
+        |req: Request, mut res: Response| -> (Request, Response, bool) {
+            if req.method == "POST" {
+                if req.body.len() > 0 {
+                    return (req, res, true);
+                }
+                res.status(400);
+            }
+            return (req, res, false);
+        },
+    );
+
+    // Redirect GET / to GET /index.html wich is a file in the public directory
     app.route("/", |req: Request, mut res: Response| -> Response {
         if req.method == "GET" {
+            res.status(301);
+            res.header("Location", "/index.html");
+        }
+        return res;
+    });
+
+    // GET with params
+    app.route("/user/", |req: Request, mut res: Response| -> Response {
+        let param_keys = ["name", "age"];
+        if req.method == "GET" {
+            for key in param_keys.iter() {
+                if !req.params.contains_key(&key[..]) {
+                    res.status(400);
+                    res.body(format!("Missing parameter: {}", key));
+                    return res;
+                }
+            }
             res.status(200);
-            res.body("<h1>Hello World!</h1>");
+            res.body(format!(
+                "<h1>Hello {}, age {}!</h1>",
+                req.params.get("name").unwrap(),
+                req.params.get("age").unwrap(),
+            ));
             return res;
         } else {
             // Default response is 404
@@ -37,7 +75,7 @@ fn main() {
     });
 
     // Add a POST endpoint to /post
-    app.route("/post", |req: Request, mut res: Response| -> Response {
+    app.route("/post/", |req: Request, mut res: Response| -> Response {
         // Spot does not have JSON serilization built inn,
         // if you want to parse JSON consider combining spot with serde_json (https://crates.io/crates/serde_json)
         println!("{}", req.body);
