@@ -6,6 +6,7 @@ use std::net::TcpStream;
 pub struct HttpParser {}
 
 impl HttpParser {
+    /// Parses an inncomming http request from a tcp stream, either returns the request object or an error string if the parse fails.
     pub fn parse(stream: &TcpStream) -> Result<request::Request, String> {
         let mut reader = BufReader::new(stream);
         // Read first line
@@ -51,8 +52,7 @@ impl HttpParser {
             }
             http_request_headers.insert(key.to_lowercase(), String::from(value));
         }
-        let mut body = String::from("");
-
+        let body;
         // If content lenght header is set we assume it has a body and try to read it
         if http_request_headers.contains_key("content-length") {
             let body_length: i32 = match http_request_headers["content-length"].parse() {
@@ -70,10 +70,11 @@ impl HttpParser {
             };
             if fail {
                 return Err(String::from("Read request body failed"));
+            } else {
+                body = body_bytes;
             }
-            for char_byte in body_bytes {
-                body.push(char_byte as char);
-            }
+        } else {
+            body = Vec::new();
         }
 
         // Get parameters from request

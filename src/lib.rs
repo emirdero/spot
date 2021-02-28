@@ -5,21 +5,31 @@ use std::io::prelude::*;
 use std::net::TcpListener;
 use std::path::Path;
 
+pub mod file_parser;
 pub mod http_parser;
 pub mod request;
 pub mod response;
 pub mod threadpool;
+use file_parser::FileParser;
 use request::Request;
 use response::Response;
 use threadpool::ThreadPool;
 
 pub struct Spot {
+    /// The amount of worker threads used to handle requests
     amount_of_threads: usize,
+    // Contains all the routes for http resources on the server
     routes: HashMap<String, fn(Request, Response) -> Response>,
+    // Contains all the middleware for the servers resources
     middleware: Vec<(String, fn(Request, Response) -> (Request, Response, bool))>,
 }
 
 impl Spot {
+    /// Returns a Spot HTTP server instance with worker threads equal to the specified amount.
+    ///
+    /// #Panics
+    ///
+    /// panics if amount of threads is 0
     pub fn new(amount_of_threads: usize) -> Spot {
         return Spot {
             amount_of_threads: amount_of_threads,
@@ -28,6 +38,9 @@ impl Spot {
         };
     }
 
+    /// Add middleware for specified resources.
+    ///
+    /// The middleware function takes inn a function that returns a modified response and request, aswell as a boolean is true if the request should be forwarded or false if you wish the server to write the current response.
     pub fn middle(
         &mut self,
         path: &str,
@@ -48,6 +61,7 @@ impl Spot {
         self.middleware.push((path_string, function));
     }
 
+    /// Add a http resource route which takes in the request and a premade respons, then returns a modifed response that is written to the client
     pub fn route(&mut self, path: &str, function: fn(Request, Response) -> Response) {
         let mut path_string = String::from(path);
         // Remove trailing / so that pathing is agnostic towards /example/ or /example
@@ -71,6 +85,7 @@ impl Spot {
         self.routes.insert(path_string, function);
     }
 
+    /// Add a file to routes, it's route is equal to the path where the file lies
     pub fn route_file(&mut self, path: &str) {
         fn function(req: Request, mut res: Response) -> Response {
             if req.method == "GET" {
@@ -80,29 +95,7 @@ impl Spot {
                     Some(file_ending) => file_ending,
                     None => "",
                 };
-                let supported_types = [
-                    ("html", "text/html"),
-                    ("css", "text/css"),
-                    ("json", "application/json"),
-                    ("js", "application/javascript"),
-                    ("zip", "application/zip"),
-                    ("csv", "text/csv"),
-                    ("xml", "text/xml"),
-                    ("ico", "image/x-icon"),
-                    ("jpg", "image/jpeg"),
-                    ("jpeg", "image/jpeg"),
-                    ("png", "image/png"),
-                    ("gif", "image/gif"),
-                    ("mp3", "audio/mpeg"),
-                    ("mp4", "video/mp4"),
-                    ("webm", "video/webm"),
-                ];
-                let mut file_type = "text/plain";
-                for supported_type in supported_types.iter() {
-                    if supported_type.0 == file_ending {
-                        file_type = supported_type.1;
-                    }
-                }
+                let file_type = FileParser::get_type(file_ending);
                 // remove first / from path and read metadata then file
                 match fs::metadata(&path[1..]) {
                     Ok(metadata) => {
@@ -142,6 +135,7 @@ impl Spot {
         Spot::route(self, &route_path, function);
     }
 
+    /// Recursive function that adds all the files in the public folder to the server routes
     fn add_static_files(&mut self, directory: &Path, path: &str) {
         let dir_iter = fs::read_dir(path).unwrap();
 
@@ -163,6 +157,8 @@ impl Spot {
             };
         }
     }
+
+    /// Make all the files in the specified directory publicly avalible
     pub fn public(&mut self, dir_name: &str) {
         let path = env::current_dir().unwrap();
         let new_root_dir = path.join(dir_name);
@@ -172,6 +168,7 @@ impl Spot {
         self.add_static_files(dir.as_path(), "");
     }
 
+    /// Bind the server to the specified IP address and listen for inncomming http requests
     pub fn bind(&mut self, ip: &str) -> String {
         let listener = match TcpListener::bind(ip) {
             Ok(result) => result,

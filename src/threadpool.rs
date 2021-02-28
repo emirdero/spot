@@ -9,7 +9,9 @@ use std::thread;
 use std::time::Duration;
 
 pub struct ThreadPool {
+    // A vector containing worker threads equal to the amount specified in new()
     workers: Vec<Worker>,
+    // A channel for forwarding jobs to the worker threads
     sender: mpsc::Sender<Message>,
 }
 
@@ -63,6 +65,7 @@ impl ThreadPool {
     }
 }
 
+/// Stops the threads gracefully, meaning that they finish their current tasks and then end themselves. Currently not in use
 impl Drop for ThreadPool {
     fn drop(&mut self) {
         println!("Sending terminate message to all workers.");
@@ -95,6 +98,9 @@ struct Worker {
 }
 
 impl Worker {
+    /// Create a new Worker.
+    ///
+    /// The worker stores clones of the routes and middleware hashmaps for handling requests. The reveiver is used to forward jobs into the thread.
     fn new(
         id: usize,
         receiver: Arc<Mutex<mpsc::Receiver<Message>>>,
@@ -132,7 +138,6 @@ impl Worker {
                             continue 'outer; // Skip to next iteration
                         }
                     };
-                    response.header("content-type", "text/html; charset=UTF-8");
                     // Remove params
                     let request_wo_params = match request.url.split("?").next() {
                         Some(url) => url,
@@ -188,6 +193,7 @@ impl Worker {
             id,
             thread: Some(thread),
         };
+        // Writes a tcp response to the client
         fn write_response(mut stream: TcpStream, response: Response) {
             let five_seconds = Duration::new(5, 0);
             stream
