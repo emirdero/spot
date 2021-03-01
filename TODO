@@ -1,3 +1,2 @@
 Make testing framework
 Document how to use Spot: github wiki and https://docs.rs/
-Exclude test from the cargo.toml
