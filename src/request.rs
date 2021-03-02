@@ -37,13 +37,13 @@ impl Request {
             headers: headers,
         };
     }
-    /// Check if the http request contains the specified list of parameters.
-    pub fn contains_params(&self, keys: Vec<&str>) -> bool {
+    /// Check if the http request contains the specified list of parameters. Returns a missing parameter if there is one
+    pub fn contains_params(&self, keys: Vec<&str>) -> Option<String> {
         for key in keys {
             if !self.params.contains_key(key) {
-                return false;
+                return Some(String::from(key));
             }
         }
-        return true;
+        return None;
     }
 }

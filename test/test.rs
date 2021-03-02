@@ -34,8 +34,8 @@ fn main() {
     app.route("/user/", |req: Request, mut res: Response| -> Response {
         let param_keys = ["name", "age"];
         if req.method == "GET" {
-            for key in param_keys.iter() {
-                if !req.params.contains_key(&key[..]) {
+            match req.contains_params(param_keys) {
+                Some(missing_key) => {
                     res.status(400);
                     res.body(format!("Missing parameter: {}", key));
                     return res;
