@@ -9,7 +9,7 @@ pub mod file_parser;
 pub mod http_parser;
 pub mod request;
 pub mod response;
-pub mod threadpool;
+mod threadpool;
 use file_parser::FileParser;
 use request::Request;
 use response::Response;
