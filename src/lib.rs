@@ -5,8 +5,8 @@ use std::io::prelude::*;
 use std::net::TcpListener;
 use std::path::Path;
 
-pub mod file_parser;
-pub mod http_parser;
+mod file_parser;
+mod http_parser;
 pub mod request;
 pub mod response;
 mod threadpool;
