@@ -32,14 +32,15 @@ fn main() {
 
     // GET with params
     app.route("/user/", |req: Request, mut res: Response| -> Response {
-        let param_keys = ["name", "age"];
+        let param_keys = vec!["name", "age"];
         if req.method == "GET" {
             match req.contains_params(param_keys) {
                 Some(missing_key) => {
                     res.status(400);
-                    res.body(format!("Missing parameter: {}", key));
+                    res.body(format!("Missing parameter: {}", missing_key));
                     return res;
                 }
+                None => {}
             }
             res.status(200);
             res.body(format!(
