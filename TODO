@@ -1,2 +1,5 @@
 Make testing framework
 Document how to use Spot: github wiki and https://docs.rs/
+Integrate oauth2 access control 
+Make sure it passes owasp
+
