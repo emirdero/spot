@@ -1,6 +1,6 @@
 # SPOT
 
-An HTTP server framework that emphezies simplicity and minimalism. Inspired by Flask and Exress.js
+An HTTP server framework that emphasizes minimalism. Inspired by Flask and Express.js
 
 Features:
 
