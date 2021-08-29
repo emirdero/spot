@@ -1,7 +1,7 @@
 [package]
 name = "spot"
 description = "HTTP server framework that emphezies simplicity and minimalism. Inspired by Flask and Exress.js"
-version = "0.1.5"
+version = "0.1.6"
 repository = "https://github.com/memir0/spot"
 documentation = "https://github.com/emirdero/spot/wiki/Documentation"
 keywords = ["http", "spot", "web", "server"]
