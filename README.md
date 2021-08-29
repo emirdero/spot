@@ -42,7 +42,7 @@ fn main() {
         },
     );
 
-    // Redirect GET / to GET /index.html wich is a file in the public directory
+    // Redirect GET / to GET /index.html which is a file in the public directory
     app.route("/", |req: Request, mut res: Response| -> Response {
         if req.method == "GET" {
             res.status(301);
