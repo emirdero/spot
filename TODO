@@ -2,4 +2,6 @@ Make testing framework
 Document how to use Spot: github wiki and https://docs.rs/
 Integrate oauth2 access control 
 Make sure it passes owasp
+make url pattern matching using suffix tree
+add support for http2 and http3
 
